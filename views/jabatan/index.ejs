@@ -1,96 +1,85 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-  <meta charset="UTF-8">
-  <title><%= title %></title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-</head>
-<body class="bg-light">
+<div class="space-y-6">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+            <h2 class="text-2xl font-bold text-black">Daftar Jabatan Aktif Pegawai</h2>
+            <p class="text-[#45464d] text-sm">Kelola dan pantau penempatan posisi seluruh pegawai</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <% 
+                // ACL Helper untuk kemudahan pengecekan
+                const userPerms = (typeof permissions !== 'undefined' && permissions) ? permissions : [];
+            %>
+            
+            <% if (userPerms.includes('tentukan_jabatan')) { %>
+                <a href="/penempatan/create" class="bg-black text-white px-5 py-2.5 rounded-lg hover:bg-gray-800 transition-all font-semibold text-sm">
+                    + Tempatkan Jabatan Baru
+                </a>
+            <% } %>
 
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
-    <div class="container">
-      <a class="navbar-brand" href="/home">Central Panel</a>
-      <span class="navbar-text ms-auto text-white">Halo, <%= user %></span>
-      <a href="/logout" class="btn btn-sm btn-danger ms-3">Logout</a>
+            <% if (userPerms.includes('export_pdf')) { %>
+                <a href="/jabatan/export-pdf" class="bg-white border border-[#c6c6cd] text-black px-5 py-2.5 rounded-lg hover:bg-[#f2f4f6] transition-all font-semibold text-sm">
+                    Export PDF
+                </a>
+            <% } %>
+        </div>
     </div>
-  </nav>
 
-  <div class="container bg-white p-4 rounded shadow-sm">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <h2>Daftar Jabatan Aktif Pegawai</h2>
-      <div>
-        <a href="/jabatan/create" class="btn btn-primary">+ Tempatkan Jabatan Baru</a>
-        <a href="/jabatan/export-pdf" class="btn btn-danger">Export PDF</a>
-      </div>
-    </div>
-
-    <form action="/jabatan" method="GET" class="row g-2 mb-3">
-      <div class="col-md-4">
-        <input type="text" name="search" class="form-control" placeholder="Cari nama pegawai atau jabatan..." value="<%= search %>">
-      </div>
-      <div class="col-auto">
-        <button type="submit" class="btn btn-secondary">Cari</button>
+    <form action="/penempatan" method="GET" class="flex gap-2">
+        <input type="text" name="search" class="flex-1 px-4 py-2 bg-white border border-[#c6c6cd] rounded-lg focus:ring-2 focus:ring-[#0058be] outline-none" placeholder="Cari nama pegawai atau jabatan..." value="<%= search %>">
+        <button type="submit" class="bg-[#0058be] text-white px-6 py-2 rounded-lg font-semibold">Cari</button>
         <% if (search) { %>
-          <a href="/jabatan" class="btn btn-outline-secondary">Reset</a>
+            <a href="/penempatan" class="bg-white border border-[#c6c6cd] px-4 py-2 rounded-lg font-semibold text-[#45464d]">Reset</a>
         <% } %>
-      </div>
     </form>
 
-    <div class="table-responsive">
-      <table class="table table-striped table-bordered align-middle">
-        <thead class="table-dark">
-          <tr>
-            <th style="width: 5%">No</th>
-            <th>Nama Pegawai</th>
-            <th>Jabatan</th>
-            <th>Unit Organisasi</th>
-            <th>Tanggal Mulai</th>
-            <th style="width: 15%">Aksi</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% if (data.length === 0) { %>
-            <tr>
-              <td colspan="6" class="text-center text-muted py-3">Tidak ada data jabatan aktif ditemukan.</td>
-            </tr>
-          <% } else { %>
-            <% data.forEach((item, index) => { %>
-              <tr>
-                <td><%= ((currentPage - 1) * 5) + index + 1 %></td>
-                <td><strong><%= item.employee_name %></strong></td>
-                <td><%= item.position_title %></td>
-                <td><%= item.unit_name %></td>
-                <td><%= new Date(item.start_date).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }) %></td>
-                <td>
-                  <a href="/jabatan/history/<%= item.employee_id %>" class="btn btn-sm btn-info text-white">Lihat Riwayat</a>
-                </td>
-              </tr>
-            <% }); %>
-          <% } %>
-        </tbody>
-      </table>
-    </div>
+    <section class="bg-white rounded-xl border border-[#c6c6cd] overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-[#f2f4f6]">
+                        <th class="px-6 py-4 text-[12px] font-bold text-[#45464d] uppercase tracking-wider">No</th>
+                        <th class="px-6 py-4 text-[12px] font-bold text-[#45464d] uppercase tracking-wider">Nama Pegawai</th>
+                        <th class="px-6 py-4 text-[12px] font-bold text-[#45464d] uppercase tracking-wider">Jabatan</th>
+                        <th class="px-6 py-4 text-[12px] font-bold text-[#45464d] uppercase tracking-wider">Unit Organisasi</th>
+                        <th class="px-6 py-4 text-[12px] font-bold text-[#45464d] uppercase tracking-wider">Tanggal Mulai</th>
+                        <th class="px-6 py-4 text-[12px] font-bold text-[#45464d] uppercase tracking-wider text-right">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-[#c6c6cd]">
+                    <% if (data && data.length === 0) { %>
+                        <tr><td colspan="6" class="px-6 py-10 text-center text-[#45464d]">Tidak ada data ditemukan.</td></tr>
+                    <% } else if (data) { %>
+                        <% data.forEach((item, index) => { %>
+                            <tr class="hover:bg-[#f7f9fb] transition-colors">
+                                <td class="px-6 py-4 text-sm text-[#191c1e]"><%= ((currentPage - 1) * 5) + index + 1 %></td>
+                                <td class="px-6 py-4 text-sm font-bold text-black"><%= item.employee_name %></td>
+                                <td class="px-6 py-4 text-sm text-[#191c1e]"><%= item.position_title %></td>
+                                <td class="px-6 py-4 text-sm text-[#191c1e]"><%= item.unit_name %></td>
+                                <td class="px-6 py-4 text-sm text-[#191c1e]"><%= new Date(item.start_date).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }) %></td>
+                                <td class="px-6 py-4 text-right">
+                                    <% if (userPerms.includes('view_history')) { %>
+                                        <a href="/jabatan/history/<%= item.employee_id %>" class="text-[#0058be] font-bold hover:underline text-sm">Lihat Riwayat</a>
+                                    <% } else { %>
+                                        <span class="text-gray-400 text-sm italic">-</span>
+                                    <% } %>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+    </section>
 
-    <% if (totalPages > 1) { %>
-      <nav class="mt-4">
-        <ul class="pagination justify-content-center">
-          <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
-            <a class="page-link" href="/jabatan?search=<%= search %>&page=<%= currentPage - 1 %>">Previous</a>
-          </li>
-
-          <% for(let i = 1; i <= totalPages; i++) { %>
-            <li class="page-item <%= currentPage === i ? 'active' : '' %>">
-              <a class="page-link" href="/jabatan?search=<%= search %>&page=<%= i %>"><%= i %></a>
-            </li>
-          <% } %>
-
-          <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
-            <a class="page-link" href="/jabatan?search=<%= search %>&page=<%= currentPage + 1 %>">Next</a>
-          </li>
-        </ul>
-      </nav>
+    <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
+        <nav class="flex justify-center mt-6">
+            <ul class="flex items-center gap-1">
+                <li><a class="px-4 py-2 border rounded-lg <%= currentPage === 1 ? 'bg-gray-100 text-gray-400' : 'bg-white hover:bg-gray-50' %>" href="/penempatan?search=<%= search %>&page=<%= currentPage - 1 %>">Prev</a></li>
+                <% for(let i = 1; i <= totalPages; i++) { %>
+                    <li><a class="px-4 py-2 border rounded-lg <%= currentPage === i ? 'bg-black text-white' : 'bg-white hover:bg-gray-50' %>" href="/penempatan?search=<%= search %>&page=<%= i %>"><%= i %></a></li>
+                <% } %>
+                <li><a class="px-4 py-2 border rounded-lg <%= currentPage === totalPages ? 'bg-gray-100 text-gray-400' : 'bg-white hover:bg-gray-50' %>" href="/penempatan?search=<%= search %>&page=<%= currentPage + 1 %>">Next</a></li>
+            </ul>
+        </nav>
     <% } %>
-  </div>
-
-</body>
-</html>
+</div>
