@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body class="bg-light">
+
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <div class="container">
+      <a class="navbar-brand" href="/home">Central Panel</a>
+      <span class="navbar-text ms-auto text-white">Halo, <%= user %></span>
+      <a href="/logout" class="btn btn-sm btn-danger ms-3">Logout</a>
+    </div>
+  </nav>
+
+  <div class="container bg-white p-4 rounded shadow-sm">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2>Daftar Jabatan Aktif Pegawai</h2>
+      <div>
+        <a href="/jabatan/create" class="btn btn-primary">+ Tempatkan Jabatan Baru</a>
+        <a href="/jabatan/export-pdf" class="btn btn-danger">Export PDF</a>
+      </div>
+    </div>
+
+    <form action="/jabatan" method="GET" class="row g-2 mb-3">
+      <div class="col-md-4">
+        <input type="text" name="search" class="form-control" placeholder="Cari nama pegawai atau jabatan..." value="<%= search %>">
+      </div>
+      <div class="col-auto">
+        <button type="submit" class="btn btn-secondary">Cari</button>
+        <% if (search) { %>
+          <a href="/jabatan" class="btn btn-outline-secondary">Reset</a>
+        <% } %>
+      </div>
+    </form>
+
+    <div class="table-responsive">
+      <table class="table table-striped table-bordered align-middle">
+        <thead class="table-dark">
+          <tr>
+            <th style="width: 5%">No</th>
+            <th>Nama Pegawai</th>
+            <th>Jabatan</th>
+            <th>Unit Organisasi</th>
+            <th>Tanggal Mulai</th>
+            <th style="width: 15%">Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (data.length === 0) { %>
+            <tr>
+              <td colspan="6" class="text-center text-muted py-3">Tidak ada data jabatan aktif ditemukan.</td>
+            </tr>
+          <% } else { %>
+            <% data.forEach((item, index) => { %>
+              <tr>
+                <td><%= ((currentPage - 1) * 5) + index + 1 %></td>
+                <td><strong><%= item.employee_name %></strong></td>
+                <td><%= item.position_title %></td>
+                <td><%= item.unit_name %></td>
+                <td><%= new Date(item.start_date).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }) %></td>
+                <td>
+                  <a href="/jabatan/history/<%= item.employee_id %>" class="btn btn-sm btn-info text-white">Lihat Riwayat</a>
+                </td>
+              </tr>
+            <% }); %>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+
+    <% if (totalPages > 1) { %>
+      <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+          <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
+            <a class="page-link" href="/jabatan?search=<%= search %>&page=<%= currentPage - 1 %>">Previous</a>
+          </li>
+
+          <% for(let i = 1; i <= totalPages; i++) { %>
+            <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+              <a class="page-link" href="/jabatan?search=<%= search %>&page=<%= i %>"><%= i %></a>
+            </li>
+          <% } %>
+
+          <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
+            <a class="page-link" href="/jabatan?search=<%= search %>&page=<%= currentPage + 1 %>">Next</a>
+          </li>
+        </ul>
+      </nav>
+    <% } %>
+  </div>
+
+</body>
+</html>

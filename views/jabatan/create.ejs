@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body class="bg-light">
+
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <div class="container">
+      <a class="navbar-brand" href="/home">Central Panel</a>
+      <span class="navbar-text ms-auto text-white">Halo, <%= user %></span>
+      <a href="/logout" class="btn btn-sm btn-danger ms-3">Logout</a>
+    </div>
+  </nav>
+
+  <div class="container" style="max-width: 700px;">
+    <div class="bg-white p-4 rounded shadow-sm">
+      <h2 class="mb-4">Form Penempatan Jabatan Baru</h2>
+      
+      <% if (error) { %>
+        <div class="alert alert-danger" role="alert">
+          <%= error %>
+        </div>
+      <% } %>
+
+      <form action="/jabatan/create" method="POST">
+        
+        <div class="mb-3">
+          <label for="employee_id" class="form-label">Nama Pegawai <span class="text-danger">*</span></label>
+          <select class="form-select" id="employee_id" name="employee_id">
+            <option value="">-- Pilih Pegawai --</option>
+            <% employees.forEach(emp => { %>
+              <option value="<%= emp.id %>" <%= oldData.employee_id == emp.id ? 'selected' : '' %>>
+                <%= emp.name %>
+              </option>
+            <% }); %>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label for="structural_position_id" class="form-label">Jabatan & Unit Kerja <span class="text-danger">*</span></label>
+          <select class="form-select" id="structural_position_id" name="structural_position_id">
+            <option value="">-- Pilih Jabatan --</option>
+            <% positions.forEach(pos => { %>
+              <option value="<%= pos.id %>" <%= oldData.structural_position_id == pos.id ? 'selected' : '' %>>
+                <%= pos.title %> (<%= pos.unit_name %>)
+              </option>
+            <% }); %>
+          </select>
+          <div class="form-text">Catatan: Jika pegawai ini sedang memegang jabatan aktif lain, sistem otomatis akan menonaktifkan jabatan lamanya per tanggal mulai baru.</div>
+        </div>
+
+        <div class="mb-4">
+          <label for="start_date" class="form-label">Tanggal Mulai Menjabat <span class="text-danger">*</span></label>
+          <input type="date" class="form-control" id="start_date" name="start_date" value="<%= oldData.start_date || '' %>">
+        </div>
+
+        <div class="d-flex justify-content-end gap-2">
+          <a href="/jabatan" class="btn btn-secondary">Batal</a>
+          <button type="submit" class="btn btn-primary">Simpan Penempatan</button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+</body>
+</html>
