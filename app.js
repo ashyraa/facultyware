@@ -10,7 +10,8 @@ var expressLayouts = require('express-ejs-layouts');
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var jabatanRouter = require('./routes/jabatan'); 
-var penempatanRouter = require('./routes/penempatan'); // <-- Tambahan rute penempatan
+var penempatanRouter = require('./routes/penempatan');
+var dashboardRouter = require('./routes/dashboard'); // <-- 1. Tambahan rute dashboard
 
 const { notFoundHandler, errorHandler } = require('./middlewares/error');
 
@@ -54,7 +55,8 @@ app.use(session({
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/jabatan', jabatanRouter);
-app.use('/penempatan', penempatanRouter); // <-- Pintu masuk halaman penentuan jabatan
+app.use('/penempatan', penempatanRouter);
+app.use('/dashboard', dashboardRouter); // <-- 2. Pintu masuk halaman dashboard
 
 // 6. Error handling
 app.use(notFoundHandler);

@@ -1,85 +1,163 @@
-<div class="space-y-6">
+<style>
+    @media print {
+        /* Sembunyikan semua elemen di luar area yang mau dicetak (seperti sidebar) */
+        body * {
+            visibility: hidden;
+        }
+        
+        /* Tampilkan hanya area konten utama */
+        #printable-area, #printable-area * {
+            visibility: visible;
+        }
+        
+        /* Posisikan area cetak pas di pojok kiri atas kertas */
+        #printable-area {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+        }
+
+        /* Class untuk menyembunyikan elemen spesifik saat dicetak */
+        .no-print {
+            display: none !important;
+        }
+
+        /* Pastikan warna background (seperti header tabel) ikut tercetak */
+        * {
+            -webkit-print-color-adjust: exact !important;
+            color-adjust: exact !important;
+        }
+    }
+</style>
+
+<div id="printable-area" class="space-y-6">
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-            <h2 class="text-2xl font-bold text-black">Daftar Jabatan Aktif Pegawai</h2>
-            <p class="text-[#45464d] text-sm">Kelola dan pantau penempatan posisi seluruh pegawai</p>
+            <h2 class="text-2xl font-bold text-black"><%= typeof title !== 'undefined' ? title : 'Struktur Pegawai' %></h2>
+            <p class="text-[#45464d] text-sm no-print">
+                <%= typeof title !== 'undefined' && title === 'Penentuan Jabatan' ? 'Kelola proses penempatan dan mutasi jabatan pegawai' : 'Kelola dan pantau penempatan posisi seluruh pegawai' %>
+            </p>
         </div>
-        <div class="flex items-center gap-2">
-            <% 
-                // ACL Helper untuk kemudahan pengecekan
-                const userPerms = (typeof permissions !== 'undefined' && permissions) ? permissions : [];
-            %>
-            
+        <div class="flex items-center gap-2 no-print">
+            <% const userPerms = (typeof permissions !== 'undefined' && permissions) ? permissions : []; %>
             <% if (userPerms.includes('tentukan_jabatan')) { %>
-                <a href="/penempatan/create" class="bg-black text-white px-5 py-2.5 rounded-lg hover:bg-gray-800 transition-all font-semibold text-sm">
+                <a href="/penempatan/create" class="bg-black text-white px-5 py-2.5 rounded-lg hover:bg-gray-800 transition-all font-semibold text-sm shadow-sm">
                     + Tempatkan Jabatan Baru
                 </a>
             <% } %>
-
+            
             <% if (userPerms.includes('export_pdf')) { %>
-                <a href="/jabatan/export-pdf" class="bg-white border border-[#c6c6cd] text-black px-5 py-2.5 rounded-lg hover:bg-[#f2f4f6] transition-all font-semibold text-sm">
+                <button onclick="window.print()" class="bg-white border border-[#c6c6cd] text-black px-5 py-2.5 rounded-lg hover:bg-[#f2f4f6] transition-all font-semibold text-sm shadow-sm cursor-pointer">
                     Export PDF
-                </a>
+                </button>
             <% } %>
         </div>
     </div>
 
-    <form action="/penempatan" method="GET" class="flex gap-2">
-        <input type="text" name="search" class="flex-1 px-4 py-2 bg-white border border-[#c6c6cd] rounded-lg focus:ring-2 focus:ring-[#0058be] outline-none" placeholder="Cari nama pegawai atau jabatan..." value="<%= search %>">
-        <button type="submit" class="bg-[#0058be] text-white px-6 py-2 rounded-lg font-semibold">Cari</button>
-        <% if (search) { %>
-            <a href="/penempatan" class="bg-white border border-[#c6c6cd] px-4 py-2 rounded-lg font-semibold text-[#45464d]">Reset</a>
-        <% } %>
-    </form>
+    <div class="flex gap-2 p-1 bg-[#f2f4f6] rounded-lg w-max no-print">
+        <button onclick="toggleView('tabel')" id="btn-tabel" class="px-5 py-2 rounded-lg font-semibold bg-black text-white shadow-sm text-sm">Tabel Data</button>
+        <button onclick="toggleView('bagan')" id="btn-bagan" class="px-5 py-2 rounded-lg font-semibold text-[#45464d] text-sm">Bagan Hierarki</button>
+    </div>
 
-    <section class="bg-white rounded-xl border border-[#c6c6cd] overflow-hidden shadow-sm">
+    <div id="data-container" data-bagan="<%= dataBaganJson %>" class="hidden"></div>
+
+    <section id="section-tabel" class="bg-white rounded-xl border border-[#c6c6cd] overflow-hidden shadow-sm">
+        <form action="<%= typeof title !== 'undefined' && title === 'Penentuan Jabatan' ? '/penempatan' : '/jabatan' %>" method="GET" class="p-4 border-b border-[#c6c6cd] flex gap-2 no-print">
+            <input type="text" name="search" class="flex-1 px-4 py-2 bg-white border border-[#c6c6cd] rounded-lg focus:ring-2 focus:ring-[#0058be] outline-none" placeholder="Cari nama pegawai atau jabatan..." value="<%= typeof search !== 'undefined' ? search : '' %>">
+            <button type="submit" class="bg-[#0058be] text-white px-6 py-2 rounded-lg font-semibold text-sm">Cari</button>
+        </form>
+
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="bg-[#f2f4f6]">
-                        <th class="px-6 py-4 text-[12px] font-bold text-[#45464d] uppercase tracking-wider">No</th>
-                        <th class="px-6 py-4 text-[12px] font-bold text-[#45464d] uppercase tracking-wider">Nama Pegawai</th>
-                        <th class="px-6 py-4 text-[12px] font-bold text-[#45464d] uppercase tracking-wider">Jabatan</th>
-                        <th class="px-6 py-4 text-[12px] font-bold text-[#45464d] uppercase tracking-wider">Unit Organisasi</th>
-                        <th class="px-6 py-4 text-[12px] font-bold text-[#45464d] uppercase tracking-wider">Tanggal Mulai</th>
-                        <th class="px-6 py-4 text-[12px] font-bold text-[#45464d] uppercase tracking-wider text-right">Aksi</th>
+                        <th class="px-6 py-4 text-[12px] font-bold text-[#45464d] uppercase">No</th>
+                        <th class="px-6 py-4 text-[12px] font-bold text-[#45464d] uppercase">Nama Pegawai</th>
+                        <th class="px-6 py-4 text-[12px] font-bold text-[#45464d] uppercase">Jabatan</th>
+                        <th class="px-6 py-4 text-[12px] font-bold text-[#45464d] uppercase text-right no-print">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-[#c6c6cd]">
-                    <% if (data && data.length === 0) { %>
-                        <tr><td colspan="6" class="px-6 py-10 text-center text-[#45464d]">Tidak ada data ditemukan.</td></tr>
-                    <% } else if (data) { %>
+                    <% if (typeof data !== 'undefined' && data.length > 0) { %>
                         <% data.forEach((item, index) => { %>
-                            <tr class="hover:bg-[#f7f9fb] transition-colors">
-                                <td class="px-6 py-4 text-sm text-[#191c1e]"><%= ((currentPage - 1) * 5) + index + 1 %></td>
-                                <td class="px-6 py-4 text-sm font-bold text-black"><%= item.employee_name %></td>
-                                <td class="px-6 py-4 text-sm text-[#191c1e]"><%= item.position_title %></td>
-                                <td class="px-6 py-4 text-sm text-[#191c1e]"><%= item.unit_name %></td>
-                                <td class="px-6 py-4 text-sm text-[#191c1e]"><%= new Date(item.start_date).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }) %></td>
-                                <td class="px-6 py-4 text-right">
-                                    <% if (userPerms.includes('view_history')) { %>
-                                        <a href="/jabatan/history/<%= item.employee_id %>" class="text-[#0058be] font-bold hover:underline text-sm">Lihat Riwayat</a>
-                                    <% } else { %>
-                                        <span class="text-gray-400 text-sm italic">-</span>
-                                    <% } %>
+                            <tr class="hover:bg-[#f7f9fb]">
+                                <td class="px-6 py-4 text-sm"><%= ((typeof currentPage !== 'undefined' ? currentPage : 1) - 1) * 5 + index + 1 %></td>
+                                <td class="px-6 py-4 text-sm font-bold"><%= item.employee_name %></td>
+                                <td class="px-6 py-4 text-sm"><%= item.position_title %></td>
+                                <td class="px-6 py-4 text-right no-print">
+                                    <a href="/jabatan/history/<%= item.employee_id %>" class="text-[#0058be] font-bold hover:underline text-sm">Riwayat</a>
                                 </td>
                             </tr>
                         <% }); %>
+                    <% } else { %>
+                        <tr><td colspan="4" class="px-6 py-10 text-center text-[#45464d]">Tidak ada data.</td></tr>
                     <% } %>
                 </tbody>
             </table>
         </div>
     </section>
 
-    <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
-        <nav class="flex justify-center mt-6">
-            <ul class="flex items-center gap-1">
-                <li><a class="px-4 py-2 border rounded-lg <%= currentPage === 1 ? 'bg-gray-100 text-gray-400' : 'bg-white hover:bg-gray-50' %>" href="/penempatan?search=<%= search %>&page=<%= currentPage - 1 %>">Prev</a></li>
-                <% for(let i = 1; i <= totalPages; i++) { %>
-                    <li><a class="px-4 py-2 border rounded-lg <%= currentPage === i ? 'bg-black text-white' : 'bg-white hover:bg-gray-50' %>" href="/penempatan?search=<%= search %>&page=<%= i %>"><%= i %></a></li>
-                <% } %>
-                <li><a class="px-4 py-2 border rounded-lg <%= currentPage === totalPages ? 'bg-gray-100 text-gray-400' : 'bg-white hover:bg-gray-50' %>" href="/penempatan?search=<%= search %>&page=<%= currentPage + 1 %>">Next</a></li>
-            </ul>
-        </nav>
-    <% } %>
+    <section id="section-bagan" class="hidden bg-white p-6 rounded-xl border border-[#c6c6cd] shadow-sm overflow-x-auto">
+        <div id="chart_div" class="flex justify-center"></div>
+    </section>
 </div>
+
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<script>
+    function toggleView(view) {
+        document.getElementById('section-tabel').classList.toggle('hidden', view !== 'tabel');
+        document.getElementById('section-bagan').classList.toggle('hidden', view !== 'bagan');
+        
+        document.getElementById('btn-tabel').className = view === 'tabel' ? 
+            'px-5 py-2 rounded-lg font-semibold bg-black text-white text-sm shadow-sm' : 
+            'px-5 py-2 rounded-lg font-semibold text-[#45464d] text-sm';
+            
+        document.getElementById('btn-bagan').className = view === 'bagan' ? 
+            'px-5 py-2 rounded-lg font-semibold bg-black text-white text-sm shadow-sm' : 
+            'px-5 py-2 rounded-lg font-semibold text-[#45464d] text-sm';
+        
+        if (view === 'bagan') drawChart();
+    }
+
+    google.charts.load('current', { packages: ["orgchart"] });
+    
+    function drawChart() {
+        const container = document.getElementById('data-container');
+        let dataBagan = [];
+        try {
+            dataBagan = JSON.parse(container.getAttribute('data-bagan') || '[]');
+        } catch (e) {
+            console.error('Gagal parsing data bagan:', e);
+            document.getElementById('chart_div').innerHTML = '<p class="text-red-500">Gagal memuat data bagan.</p>';
+            return;
+        }
+
+        if (dataBagan.length === 0) {
+            document.getElementById('chart_div').innerHTML = '<p class="text-gray-500">Data bagan tidak tersedia.</p>';
+            return;
+        }
+        
+        var data = new google.visualization.DataTable();
+        data.addColumn('string', 'Jabatan');
+        data.addColumn('string', 'Atasan');
+        
+        dataBagan.forEach(item => {
+            const itemId = String(item.id);
+            const parentId = item.parent_id ? String(item.parent_id) : '';
+            
+            data.addRows([
+                [{
+                    'v': itemId, 
+                    'f': `<div class="p-2 text-center min-w-[120px]">
+                            <div class="font-bold text-sm text-[#0058be] whitespace-normal break-words">${item.title}</div>
+                            <div class="text-xs italic text-gray-600 mt-1">${item.employee_name || 'Posisi Kosong'}</div>
+                          </div>`
+                }, parentId]
+            ]);
+        });
+        
+        var chart = new google.visualization.OrgChart(document.getElementById('chart_div'));
+        chart.draw(data, { allowHtml: true, size: 'medium' });
+    }
+</script>

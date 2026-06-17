@@ -1,0 +1,51 @@
+<div class="space-y-6">
+    <div class="flex justify-between items-center">
+        <h2 class="text-2xl font-bold text-black">Struktur Organisasi</h2>
+        <a href="/jabatan" class="bg-gray-100 text-black px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-200">
+            Kembali ke Tabel
+        </a>
+    </div>
+
+    <div id="data-container" data-bagan='<%- dataBaganJson %>'></div>
+    
+    <div class="bg-white p-6 rounded-xl border border-[#c6c6cd] shadow-sm overflow-x-auto">
+        <div id="chart_div" class="flex justify-center"></div>
+    </div>
+</div>
+
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<script>
+    google.charts.load('current', {packages:["orgchart"]});
+    google.charts.setOnLoadCallback(drawChart);
+
+    function drawChart() {
+        const container = document.getElementById('data-container');
+        // Mengambil data yang sudah di-parse dari atribut HTML
+        const dataBagan = JSON.parse(container.getAttribute('data-bagan') || '[]');
+
+        if (dataBagan.length === 0) {
+            document.getElementById('chart_div').innerHTML = '<p class="text-gray-500">Data tidak tersedia.</p>';
+            return;
+        }
+        
+        var data = new google.visualization.DataTable();
+        data.addColumn('string', 'Jabatan');
+        data.addColumn('string', 'Atasan');
+        data.addColumn('string', 'ToolTip');
+
+        dataBagan.forEach(item => {
+            data.addRows([
+                [{
+                    'v': String(item.id), 
+                    'f': `<div class="p-2 cursor-default">
+                            <div class="font-bold text-[#0058be] text-sm">${item.title}</div>
+                            <div class="text-[10px] text-gray-500 italic">${item.employee_name || 'Posisi Kosong'}</div>
+                          </div>`
+                }, String(item.parent_id || ''), item.title]
+            ]);
+        });
+
+        var chart = new google.visualization.OrgChart(document.getElementById('chart_div'));
+        chart.draw(data, {'allowHtml':true, 'size': 'medium'});
+    }
+</script>
