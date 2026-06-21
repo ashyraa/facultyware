@@ -1,10 +1,60 @@
 <div class="space-y-6">
     <div class="flex justify-between items-center">
-        <h2 class="text-2xl font-bold text-black">Struktur Organisasi</h2>
-        <a href="/jabatan" class="bg-gray-100 text-black px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-200">
-            Kembali ke Tabel
-        </a>
+        <h2 class="text-2xl font-bold text-black"><%= title %></h2>
+        
+        <% if (permissions.includes('export_pdf')) { %>
+            <button id="btn-export" onclick="downloadPdf('struktur')" class="bg-white border border-[#c6c6cd] text-black px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-50 flex items-center gap-2 shadow-sm transition-all">
+                <span class="material-symbols-outlined text-sm">download</span> <span id="btn-text">Unduh PDF</span>
+            </button>
+        <% } %>
     </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <script>
+    async function downloadPdf(type) {
+    const btn = document.getElementById('btn-export');
+    const text = document.getElementById('btn-text');
+    btn.disabled = true;
+    text.innerText = "Memproses...";
+
+    let imageData = null;
+    // Ambil gambar hanya jika tipe adalah struktur
+    if (type === 'struktur') {
+        const chartDiv = document.getElementById('chart_div');
+        const canvas = await html2canvas(chartDiv, { scale: 2, backgroundColor: "#ffffff" });
+        imageData = canvas.toDataURL("image/png");
+    }
+
+    try {
+        const response = await fetch('/jabatan/export-pdf', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: type, image: imageData })
+        });
+        
+        if (!response.ok) {
+            const errData = await response.json();
+            throw new Error(errData.error || 'Gagal mengunduh');
+        }
+        
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Laporan_${type}_${new Date().toISOString().split('T')[0]}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+    } catch (err) {
+        alert('Gagal mengunduh: ' + err.message);
+    } finally {
+        btn.disabled = false;
+        text.innerText = type === 'struktur' ? "Unduh PDF" : "Ekspor PDF";
+    }
+}
+
+    </script>
 
     <div id="data-container" data-bagan='<%- dataBaganJson %>'></div>
     
@@ -20,11 +70,10 @@
 
     function drawChart() {
         const container = document.getElementById('data-container');
-        // Mengambil data yang sudah di-parse dari atribut HTML
         const dataBagan = JSON.parse(container.getAttribute('data-bagan') || '[]');
 
         if (dataBagan.length === 0) {
-            document.getElementById('chart_div').innerHTML = '<p class="text-gray-500">Data tidak tersedia.</p>';
+            document.getElementById('chart_div').innerHTML = '<p class="text-gray-500 text-sm p-4">Data tidak tersedia.</p>';
             return;
         }
         

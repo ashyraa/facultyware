@@ -1,47 +1,33 @@
-<aside class="fixed left-0 top-0 h-full flex flex-col pt-[24px] pb-[24px] bg-white border-r border-[#c6c6cd] w-[260px] z-50">
-    <div class="px-[24px] mb-10">
-        <h1 class="text-[24px] font-bold text-black">HR System</h1>
-        <p class="text-[12px] font-semibold text-[#45464d]">Management Dashboard</p>
-    </div>
-    
-    <nav class="flex-grow flex flex-col gap-1">
-        <a class="sidebar-link flex items-center gap-[8px] text-[#45464d] px-4 py-3 hover:bg-[#eceef0] transition-all" href="/dashboard">
-            <span class="material-symbols-outlined">dashboard</span>
-            <span>Dashboard</span>
-        </a>
-        <a class="sidebar-link flex items-center gap-[8px] text-[#45464d] px-4 py-3 hover:bg-[#eceef0] transition-all" href="/jabatan">
-            <span class="material-symbols-outlined">account_tree</span>
-            <span>Struktur Pegawai</span>
-        </a>
-        <a class="sidebar-link flex items-center gap-[8px] text-[#45464d] px-4 py-3 hover:bg-[#eceef0] transition-all" href="/penempatan">
-            <span class="material-symbols-outlined">work_history</span>
-            <span>Penentuan Jabatan</span>
-        </a>
-    </nav>
+<aside class="w-[260px] fixed top-0 left-0 h-screen bg-white border-r border-[#c6c6cd] p-4 z-50 flex flex-col justify-between">
+    <div>
+        <div class="mb-8 p-2">
+            <h1 class="text-xl font-bold">HR System</h1>
+            <p class="text-xs text-gray-500">Management Dashboard</p>
+        </div>
+        
+        <nav class="space-y-2">
+            <% 
+            // Fungsi pembantu untuk menentukan class aktif
+            const isActive = (path) => (typeof title !== 'undefined' && title.includes(path)) ? 'bg-[#e7f0ff] text-[#0058be]' : 'hover:bg-gray-100';
+            %>
 
-    <div class="px-4 mt-auto">
-        <a href="/logout" class="flex items-center gap-[8px] text-[#45464d] px-4 py-3 hover:bg-[#eceef0]">
-            <span class="material-symbols-outlined">logout</span>
-            <span>Keluar</span>
+            <a href="/dashboard" class="flex items-center gap-3 p-3 rounded-lg transition <%= isActive('Dashboard') %>">
+                <span class="material-symbols-outlined">dashboard</span> Dashboard
+            </a>
+
+            <a href="/jabatan/struktur" class="flex items-center gap-3 p-3 rounded-lg transition <%= isActive('Struktur') %>">
+                <span class="material-symbols-outlined">account_tree</span> Struktur Pegawai
+            </a>
+
+            <a href="/jabatan/penempatan" class="flex items-center gap-3 p-3 rounded-lg transition <%= isActive('Penempatan') %>">
+                <span class="material-symbols-outlined">work</span> Penentuan Jabatan
+            </a>
+        </nav>
+    </div>
+
+    <div class="p-2">
+        <a href="/logout" class="flex items-center gap-3 p-3 rounded-lg text-red-600 hover:bg-red-50 transition">
+            <span class="material-symbols-outlined">logout</span> Logout
         </a>
     </div>
 </aside>
-
-<script>
-    document.addEventListener("DOMContentLoaded", () => {
-        const currentPath = window.location.pathname;
-        const links = document.querySelectorAll('.sidebar-link');
-        
-        links.forEach(link => {
-            const href = link.getAttribute('href');
-            
-            // Cek apakah URL browser saat ini sama dengan atribut href pada menu
-            if (currentPath === href || (currentPath.startsWith(href) && href !== '/')) {
-                // Hapus warna abu-abu netral
-                link.classList.remove('text-[#45464d]', 'hover:bg-[#eceef0]');
-                // Pasang warna biru aktif (sesuai template asli)
-                link.classList.add('border-l-4', 'border-[#0058be]', 'bg-[#d8e2ff]', 'text-[#001a42]');
-            }
-        });
-    });
-</script>

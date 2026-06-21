@@ -1,16 +1,15 @@
 var express = require('express');
 var router = express.Router();
 
-// Memanggil controller jabatan karena kita meminjam fungsi tabel dan form dari sana
 const jabatanController = require('../controllers/jabatanController');
 
-/* GET penempatan page (Menampilkan tabel daftar jabatan) */
-router.get('/', jabatanController.index); 
+// Ubah 'index' menjadi 'penempatan'
+router.get('/', jabatanController.penempatan); 
 
-/* GET form tambah penempatan (Menampilkan form input) */
+// Ubah 'createPage' menjadi 'createPage' (ini sudah benar)
 router.get('/create', jabatanController.createPage); 
 
-/* POST simpan data penempatan baru (Memproses data ke database) */
+// Ubah 'store' menjadi 'store' (ini sudah benar)
 router.post('/store', jabatanController.store); 
 
 module.exports = router;

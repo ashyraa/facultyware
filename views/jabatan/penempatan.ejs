@@ -1,0 +1,116 @@
+<div class="space-y-6">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+            <h2 class="text-2xl font-bold text-black"><%= title %></h2>
+            <p class="text-[#45464d] text-sm">Kelola proses penempatan dan mutasi jabatan pegawai</p>
+        </div>
+        
+        <div class="flex gap-2">
+            <% if (permissions.includes('export_pdf')) { %>
+                <button id="btn-export" onclick="downloadPdf('penempatan')" class="bg-white border border-[#c6c6cd] text-black px-5 py-2.5 rounded-lg hover:bg-gray-50 transition-all font-semibold text-sm shadow-sm flex items-center gap-2">
+                    <span class="material-symbols-outlined text-sm">download</span> <span id="btn-text">Ekspor PDF</span>
+                </button>
+            <% } %>
+
+            <% if (permissions.includes('tentukan_jabatan')) { %>
+                <a href="/jabatan/penempatan/create" class="bg-black text-white px-5 py-2.5 rounded-lg hover:bg-gray-800 transition-all font-semibold text-sm shadow-sm">
+                    + Tempatkan Jabatan Baru
+                </a>
+            <% } %>
+        </div>
+    </div>
+
+    <script>
+    async function downloadPdf(type) {
+    const btn = document.getElementById('btn-export');
+    const text = document.getElementById('btn-text');
+    btn.disabled = true;
+    text.innerText = "Memproses...";
+
+    let imageData = null;
+    // Ambil gambar hanya jika tipe adalah struktur
+    if (type === 'struktur') {
+        const chartDiv = document.getElementById('chart_div');
+        const canvas = await html2canvas(chartDiv, { scale: 2, backgroundColor: "#ffffff" });
+        imageData = canvas.toDataURL("image/png");
+    }
+
+    try {
+        const response = await fetch('/jabatan/export-pdf', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: type, image: imageData })
+        });
+        
+        if (!response.ok) {
+            const errData = await response.json();
+            throw new Error(errData.error || 'Gagal mengunduh');
+        }
+        
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Laporan_${type}_${new Date().toISOString().split('T')[0]}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+    } catch (err) {
+        alert('Gagal mengunduh: ' + err.message);
+    } finally {
+        btn.disabled = false;
+        text.innerText = type === 'struktur' ? "Unduh PDF" : "Ekspor PDF";
+    }
+}
+    </script>
+
+    <section class="bg-white rounded-xl border border-[#c6c6cd] overflow-hidden shadow-sm">
+        <form action="/jabatan/penempatan" method="GET" class="p-4 border-b border-[#c6c6cd] flex gap-2">
+            <input type="text" name="search" class="flex-1 px-4 py-2 bg-white border border-[#c6c6cd] rounded-lg focus:ring-2 focus:ring-[#0058be] outline-none" placeholder="Cari nama pegawai atau jabatan..." value="<%= search %>">
+            <button type="submit" class="bg-[#0058be] text-white px-6 py-2 rounded-lg font-semibold text-sm">Cari</button>
+        </form>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-[#f2f4f6]">
+                        <th class="px-6 py-4 text-[12px] font-bold text-[#45464d] uppercase">No</th>
+                        <th class="px-6 py-4 text-[12px] font-bold text-[#45464d] uppercase">Nama Pegawai</th>
+                        <th class="px-6 py-4 text-[12px] font-bold text-[#45464d] uppercase">Jabatan</th>
+                        <th class="px-6 py-4 text-[12px] font-bold text-[#45464d] uppercase text-right">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-[#c6c6cd]">
+                    <% if (data.length > 0) { %>
+                        <% data.forEach((item, index) => { %>
+                            <tr class="hover:bg-[#f7f9fb]">
+                                <td class="px-6 py-4 text-sm"><%= (currentPage - 1) * 5 + index + 1 %></td>
+                                <td class="px-6 py-4 text-sm font-bold"><%= item.employee_name %></td>
+                                <td class="px-6 py-4 text-sm"><%= item.position_title || '-' %></td>
+                                <td class="px-6 py-4 text-right">
+                                    <% if (permissions.includes('view_history')) { %>
+                                        <a href="/jabatan/history/<%= item.employee_id %>" class="text-[#0058be] font-bold hover:underline text-sm">Riwayat</a>
+                                    <% } else { %>
+                                        <span class="text-gray-400 text-sm italic cursor-not-allowed">Riwayat</span>
+                                    <% } %>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    <% } else { %>
+                        <tr><td colspan="4" class="px-6 py-10 text-center text-[#45464d]">Tidak ada data.</td></tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+
+        <% if (totalPages > 1) { %>
+            <div class="p-4 border-t border-[#c6c6cd] flex items-center justify-between">
+                <span class="text-sm text-[#45464d]">Halaman <%= currentPage %> dari <%= totalPages %></span>
+                <div class="flex gap-2">
+                    <% if (currentPage > 1) { %> <a href="?page=<%= currentPage - 1 %>&search=<%= search %>" class="px-4 py-2 bg-gray-100 text-sm rounded">Prev</a> <% } %>
+                    <% if (currentPage < totalPages) { %> <a href="?page=<%= currentPage + 1 %>&search=<%= search %>" class="px-4 py-2 bg-gray-100 text-sm rounded">Next</a> <% } %>
+                </div>
+            </div>
+        <% } %>
+    </section>
+</div>
