@@ -76,11 +76,22 @@ const login = async (req, res, next) => {
     req.session.role = roleName;
     req.session.permissions = userPermissions; 
     
-    if (roleName === 'admin' || roleName === 'admin_kepegawaian') {
-        return res.redirect('/dashboard'); 
-    } else {
-        return res.redirect('/home'); 
-    }
+    // ===================================================================
+    // PERBAIKAN: Paksa Express menunggu session tersimpan sebelum redirect
+    // ===================================================================
+    req.session.save((err) => {
+        if (err) {
+            console.error("Gagal menyimpan session:", err);
+            return next(err);
+        }
+        
+        // Setelah sukses tersimpan, baru lakukan redirect
+        if (roleName === 'admin' || roleName === 'admin_kepegawaian') {
+            return res.redirect('/dashboard'); 
+        } else {
+            return res.redirect('/home'); 
+        }
+    });
     
   } catch (err) {
     next(err);
