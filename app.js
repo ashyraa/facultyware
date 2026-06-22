@@ -37,6 +37,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Session configuration
 const sessionStore = new MySQLStore({
   host: process.env.DB_HOST,
+  port: process.env.DB_PORT, // <--- INI PERBAIKANNYA (TAMBAH PORT)
   user: process.env.DB_USER,
   // PASTIKAN SAMA DENGAN DI RAILWAY (DB_PASSWORD atau DB_PASS)
   password: process.env.DB_PASSWORD || process.env.DB_PASS, 
