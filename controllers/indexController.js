@@ -9,7 +9,6 @@ const home = (req, res) => {
   res.render("home", { title: "Home", user: req.session.username });
 };
 
-// 1. Perbaikan Halaman Login
 const loginPage = (req, res) => {
   if (req.session.userId) {
     if (req.session.role === 'admin' || req.session.role === 'admin_kepegawaian') {
@@ -25,7 +24,6 @@ const loginPage = (req, res) => {
   });
 };
 
-// 2. Proses Login (Dinamis membaca Database ACL dengan Filter Keamanan)
 const login = async (req, res, next) => {
   const { username, password } = req.body;
 
@@ -43,7 +41,6 @@ const login = async (req, res, next) => {
       return res.render("login", { title: "Login", error: "Username atau password salah!", layout: false });
     }
 
-    // Cari nama Role user ini
     const [roleRows] = await db.query(`
         SELECT r.name 
         FROM roles r 
@@ -52,7 +49,6 @@ const login = async (req, res, next) => {
     `, [user.id]);
     const roleName = roleRows.length > 0 ? roleRows[0].name : 'user';
 
-    // Cari daftar Hak Akses (Permissions) user ini
     const [permRows] = await db.query(`
         SELECT p.name 
         FROM permissions p 
@@ -63,29 +59,21 @@ const login = async (req, res, next) => {
     
     let userPermissions = permRows.map(row => row.name);
 
-    // ===================================================================
-    // FILTER KEAMANAN PAKSA: Jika Admin, buang permission view_history
-    // ===================================================================
     if (roleName === 'admin') {
         userPermissions = userPermissions.filter(p => p !== 'view_history');
     }
 
-    // Simpan ke Session
     req.session.userId = user.id;
     req.session.username = user.username;
     req.session.role = roleName;
     req.session.permissions = userPermissions; 
     
-    // ===================================================================
-    // PERBAIKAN: Paksa Express menunggu session tersimpan sebelum redirect
-    // ===================================================================
     req.session.save((err) => {
         if (err) {
             console.error("Gagal menyimpan session:", err);
             return next(err);
         }
-        
-        // Setelah sukses tersimpan, baru lakukan redirect
+
         if (roleName === 'admin' || roleName === 'admin_kepegawaian') {
             return res.redirect('/dashboard'); 
         } else {

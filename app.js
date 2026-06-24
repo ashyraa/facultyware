@@ -27,7 +27,6 @@ app.set('layout', 'layout');
 // Middlewares
 app.use(logger('dev'));
 
-// PENTING: Penambahan limit agar bisa menerima data gambar Base64 dari html2canvas
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
@@ -37,16 +36,13 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Session configuration
 const sessionStore = new MySQLStore({
   host: process.env.DB_HOST,
-  port: process.env.DB_PORT, // <--- INI PERBAIKANNYA (TAMBAH PORT)
+  port: process.env.DB_PORT, 
   user: process.env.DB_USER,
-  // PASTIKAN SAMA DENGAN DI RAILWAY (DB_PASSWORD atau DB_PASS)
   password: process.env.DB_PASSWORD || process.env.DB_PASS, 
   database: process.env.DB_NAME,
 });
 
-// ==== TAMBAHAN BARU UNTUK RAILWAY ====
 app.set('trust proxy', 1);
-// =====================================
 
 app.use(session({
   key: 'session_cookie_name',
@@ -56,7 +52,7 @@ app.use(session({
   saveUninitialized: false,
   cookie: { 
     maxAge: 1000 * 60 * 60 * 24,
-    secure: process.env.NODE_ENV === 'production' // otomatis true kalau di railway
+    secure: process.env.NODE_ENV === 'production' 
   }
 }));
 

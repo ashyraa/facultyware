@@ -3,7 +3,6 @@ const PDFDocument = require('pdfkit-table');
 
 const getPermissions = (req) => req.session.permissions || [];
 
-// 1. Menampilkan Bagan Hierarki
 const struktur = async (req, res, next) => {
     try {
         const [dataBagan] = await db.query(`
@@ -23,7 +22,6 @@ const struktur = async (req, res, next) => {
     } catch (err) { next(err); }
 };
 
-// 2. Menampilkan Tabel Penempatan
 const penempatan = async (req, res, next) => {
     try {
         const search = req.query.search || '';
@@ -65,7 +63,6 @@ const createPage = async (req, res, next) => {
     } catch (err) { next(err); }
 };
 
-// 3. STORE DENGAN ALGORITMA CEK KETERSEDIAAN
 const store = async (req, res, next) => {
     if (!getPermissions(req).includes('tentukan_jabatan')) return res.status(403).send("Akses Ditolak!");
     const { employee_id, structural_position_id, start_date } = req.body;
@@ -77,8 +74,6 @@ const store = async (req, res, next) => {
             return res.render('jabatan/create', { title: 'Penempatan Jabatan Baru', user: req.session.username, permissions: getPermissions(req), employees, positions, error: 'Semua kolom wajib diisi!', oldData: req.body });
         }
 
-        // --- ALGORITMA CEK KETERSEDIAAN ---
-        // Cek apakah posisi ini sedang diisi oleh pegawai lain
         const [isOccupied] = await db.query(
             "SELECT id FROM structural_position_histories WHERE structural_position_id = ? AND end_date IS NULL", 
             [structural_position_id]
@@ -97,9 +92,7 @@ const store = async (req, res, next) => {
                 oldData: req.body 
             });
         }
-        // --- AKHIR ALGORITMA ---
-
-        // Proses jika jabatan tersedia
+        
         await db.query("UPDATE structural_position_histories SET end_date = ? WHERE employee_id = ? AND end_date IS NULL", [start_date, employee_id]);
         await db.query("INSERT INTO structural_position_histories (employee_id, structural_position_id, start_date) VALUES (?, ?, ?)", [employee_id, structural_position_id, start_date]);
         res.redirect('/jabatan/penempatan');
